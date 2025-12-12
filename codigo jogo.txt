@@ -1,0 +1,928 @@
+import 'package:flutter/material.dart';
+import 'dart:math';
+
+// =========================================================
+// 1. ESTILO E CORES GLOBAIS
+// =========================================================
+
+// Cores Pastel
+const Color pastelPink = Color(0xFFFFC5D0);
+const Color pastelBlue = Color(0xFFB9E6FF);
+const Color pastelPurple = Color(0xFFE5C6FF);
+const Color pastelYellow = Color(0xFFFFF3B2);
+const Color primaryAccent = pastelPink;
+const Color backgroundBase = pastelBlue;
+const Color customGreen = Color(0xFFC7F2A4);
+const Color customRed = Color(0xFFFF9494);
+
+// Tema da Aplicação
+final ThemeData appTheme = ThemeData(
+  useMaterial3: true,
+  colorScheme: ColorScheme.fromSwatch().copyWith(
+    primary: primaryAccent,
+    secondary: pastelPurple,
+    background: backgroundBase,
+  ),
+  appBarTheme: const AppBarTheme(
+    backgroundColor: primaryAccent,
+    titleTextStyle: TextStyle(
+      color: Colors.white,
+      fontSize: 22,
+      fontWeight: FontWeight.bold,
+    ),
+    iconTheme: IconThemeData(color: Colors.white),
+  ),
+  elevatedButtonTheme: ElevatedButtonThemeData(
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Colors.white,
+      foregroundColor: primaryAccent,
+      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 6,
+      textStyle: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+    ),
+  ),
+);
+
+// =========================================================
+// 2. BACKGROUND COM DESENHOS FOFINHOS (CustomPainter)
+// =========================================================
+
+class CuteBackgroundPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withOpacity(0.3)
+      ..style = PaintingStyle.fill;
+
+    // Círculos (Pontos)
+    canvas.drawCircle(Offset(size.width * 0.1, size.height * 0.05), 15, paint);
+    canvas.drawCircle(Offset(size.width * 0.9, size.height * 0.3), 20, paint);
+    canvas.drawCircle(Offset(size.width * 0.2, size.height * 0.9), 10, paint);
+    canvas.drawCircle(Offset(size.width * 0.7, size.height * 0.6), 25, paint);
+
+    // Formas de Coração (simuladas com Path)
+    _drawHeart(canvas, Offset(size.width * 0.5, size.height * 0.15), 18, pastelPink.withOpacity(0.5));
+    _drawHeart(canvas, Offset(size.width * 0.05, size.height * 0.6), 12, pastelPurple.withOpacity(0.5));
+  }
+
+  void _drawHeart(Canvas canvas, Offset center, double size, Color color) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final path = Path();
+    path.moveTo(center.dx, center.dy + size * 0.3);
+    path.cubicTo(
+      center.dx + size, center.dy - size * 0.5,
+      center.dx + size * 0.5, center.dy - size * 1.2,
+      center.dx, center.dy - size * 0.5,
+    );
+    path.cubicTo(
+      center.dx - size * 0.5, center.dy - size * 1.2,
+      center.dx - size, center.dy - size * 0.5,
+      center.dx, center.dy + size * 0.3,
+    );
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// =========================================================
+// 3. ESTRUTURA PRINCIPAL (CupGameApp)
+// =========================================================
+
+void main() {
+  runApp(const CupGameApp());
+}
+
+class CupGameApp extends StatelessWidget {
+  const CupGameApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: "Jogo do Copo Fofo",
+      debugShowCheckedModeBanner: false,
+      theme: appTheme,
+      routes: {
+        "/": (context) => const TelaInicial(),
+        "/jogar": (context) => const TelaJogo(),
+        "/personalizar": (context) => const TelaPersonalizar(),
+        "/config": (context) => const TelaConfig(),
+      },
+      initialRoute: "/",
+    );
+  }
+}
+
+// =========================================================
+// 4. TELA INICIAL (Menu)
+// =========================================================
+
+class TelaInicial extends StatelessWidget {
+  const TelaInicial({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: CustomPaint(
+        painter: CuteBackgroundPainter(),
+        child: Container(
+          color: backgroundBase.withOpacity(0.8),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.local_drink,
+                  size: 120,
+                  color: Colors.white,
+                  shadows: [
+                    BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10)
+                  ],
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  "JOGO DO COPO",
+                  style: TextStyle(
+                    fontSize: 42,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 40),
+
+                _menuButton(
+                  context,
+                  "Jogar",
+                  Icons.play_arrow,
+                  () => Navigator.pushNamed(context, "/jogar"),
+                  color: primaryAccent,
+                ),
+                const SizedBox(height: 20),
+
+                _menuButton(
+                  context,
+                  "Personalizar Copo",
+                  Icons.color_lens,
+                  () => Navigator.pushNamed(context, "/personalizar"),
+                  color: pastelPurple,
+                ),
+                const SizedBox(height: 20),
+
+                _menuButton(
+                  context,
+                  "Configurações",
+                  Icons.settings,
+                  () => Navigator.pushNamed(context, "/config"),
+                  color: Colors.blueGrey,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _menuButton(
+    BuildContext context,
+    String title,
+    IconData icon,
+    VoidCallback onPressed, {
+    required Color color,
+  }) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        elevation: 8,
+      ),
+      onPressed: onPressed,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 26),
+          const SizedBox(width: 12),
+          Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+        ],
+      ),
+    );
+  }
+}
+
+// =========================================================
+// 5. TELA DE CONFIGURAÇÕES
+// =========================================================
+
+class TelaConfig extends StatefulWidget {
+  const TelaConfig({super.key});
+
+  // Simulação de estado (Em uma app real, seria um estado global/Provider)
+  static int currentShuffleCount = 8;
+  static double currentVolume = 0.8;
+  static bool soundEnabled = true;
+
+  @override
+  State<TelaConfig> createState() => _TelaConfigState();
+}
+
+class _TelaConfigState extends State<TelaConfig> {
+  final Map<int, String> _difficultyLevels = {
+    4: 'Fácil (4x)',
+    8: 'Médio (8x)',
+    12: 'Difícil (12x)',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: pastelPurple,
+      appBar: AppBar(
+        title: const Text("Configurações do Jogo"),
+        backgroundColor: pastelPurple.withOpacity(0.8),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(20.0),
+        children: [
+          // 1. DIFICULDADE
+          const Text(
+            "⚙️ Dificuldade",
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+          const Divider(color: Colors.white38),
+          
+          ListTile(
+            title: const Text('Nível de Dificuldade', style: TextStyle(color: Colors.white)),
+            subtitle: Text(
+              _difficultyLevels[TelaConfig.currentShuffleCount] ?? 'Médio',
+              style: const TextStyle(color: Colors.white70),
+            ),
+            trailing: DropdownButton<int>(
+              value: TelaConfig.currentShuffleCount,
+              dropdownColor: pastelPurple.withOpacity(0.9),
+              icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+              onChanged: (int? newValue) {
+                if (newValue != null) {
+                  setState(() {
+                    TelaConfig.currentShuffleCount = newValue;
+                  });
+                }
+              },
+              items: _difficultyLevels.keys.map<DropdownMenuItem<int>>((int key) {
+                return DropdownMenuItem<int>(
+                  value: key,
+                  child: Text(
+                    _difficultyLevels[key]!,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          
+          const SizedBox(height: 30),
+
+          // 2. ÁUDIO
+          const Text(
+            "🔊 Áudio",
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+          const Divider(color: Colors.white38),
+
+          ListTile(
+            title: const Text('Volume', style: TextStyle(color: Colors.white)),
+            subtitle: Slider(
+              value: TelaConfig.currentVolume,
+              min: 0.0,
+              max: 1.0,
+              divisions: 10,
+              activeColor: pastelPink,
+              inactiveColor: Colors.white38,
+              label: (TelaConfig.currentVolume * 100).round().toString(),
+              onChanged: (double newValue) {
+                setState(() {
+                  TelaConfig.currentVolume = newValue;
+                });
+              },
+            ),
+            trailing: Text(
+              '${(TelaConfig.currentVolume * 100).round()}%',
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+          
+          SwitchListTile(
+            title: const Text('Efeitos Sonoros', style: TextStyle(color: Colors.white)),
+            value: TelaConfig.soundEnabled,
+            activeColor: pastelPink,
+            onChanged: (bool newValue) {
+              setState(() {
+                TelaConfig.soundEnabled = newValue;
+              });
+            },
+          ),
+          
+          const SizedBox(height: 40),
+
+          // 3. RESETAR
+          ElevatedButton.icon(
+            icon: const Icon(Icons.restore, color: customRed),
+            label: const Text("Resetar Pontuação"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: customRed,
+              padding: const EdgeInsets.symmetric(vertical: 15),
+            ),
+            onPressed: () {
+               ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Pontuação resetada (simulação)!')),
+                );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// =========================================================
+// 6. TELA DE PERSONALIZAÇÃO
+// =========================================================
+
+class CustomCupStyle {
+  static Color selectedColor = pastelPurple;
+  static String selectedPattern = 'Nenhum';
+  static String selectedModel = 'Clássico';
+}
+
+class TelaPersonalizar extends StatefulWidget {
+  const TelaPersonalizar({super.key});
+
+  @override
+  State<TelaPersonalizar> createState() => _TelaPersonalizarState();
+}
+
+class _TelaPersonalizarState extends State<TelaPersonalizar> {
+  
+  final List<Map<String, dynamic>> _colors = [
+    {'name': 'Roxo', 'color': pastelPurple},
+    {'name': 'Rosa', 'color': pastelPink},
+    {'name': 'Azul', 'color': pastelBlue},
+    {'name': 'Amarelo', 'color': pastelYellow},
+    {'name': 'Verde', 'color': customGreen},
+  ];
+
+  final List<String> _patterns = ['Nenhum', 'Pontos', 'Listras', 'Corações'];
+  final List<String> _models = ['Clássico', 'Taça', 'Caneca'];
+
+
+  // --- Pré-visualização do Copo (Desenho 2D Simples) ---
+  Widget _buildCupPreview() {
+    return Center(
+      child: Container(
+        height: 150,
+        width: 150,
+        margin: const EdgeInsets.symmetric(vertical: 20),
+        child: CustomPaint(
+          painter: CupPainter(
+            baseColor: CustomCupStyle.selectedColor,
+            model: CustomCupStyle.selectedModel,
+            pattern: CustomCupStyle.selectedPattern,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- Componente de Seleção Genérico ---
+  Widget _buildSelectionRow({required String title, required List<dynamic> options, required dynamic selectedValue, required Function(dynamic) onSelect}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+          const SizedBox(height: 10),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: options.map((option) {
+                bool isColorMap = option is Map && option.containsKey('color');
+                dynamic value = isColorMap ? option['color'] : option;
+                bool isSelected = selectedValue == value;
+                String label = isColorMap ? option['name'] : option.toString();
+                Color visualColor = isColorMap ? option['color'] : (isSelected ? primaryAccent : Colors.white24);
+
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: GestureDetector(
+                    onTap: () => setState(() => onSelect(value)),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: visualColor,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isSelected ? Colors.white : Colors.transparent,
+                          width: 3,
+                        ),
+                      ),
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          color: visualColor.computeLuminance() > 0.5 && !isSelected ? Colors.black : Colors.white,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: pastelPurple,
+      appBar: AppBar(
+        title: const Text("Personalizar Copo"),
+        backgroundColor: pastelPurple.withOpacity(0.8),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Pré-visualização",
+              style: TextStyle(fontSize: 20, color: Colors.white),
+            ),
+            _buildCupPreview(),
+
+            const Divider(color: Colors.white38),
+            
+            // 1. Seleção de Cores
+            _buildSelectionRow(
+              title: "Cor Base",
+              options: _colors,
+              selectedValue: CustomCupStyle.selectedColor,
+              onSelect: (color) => CustomCupStyle.selectedColor = color as Color,
+            ),
+
+            const Divider(color: Colors.white38),
+
+            // 2. Seleção de Estampas
+            _buildSelectionRow(
+              title: "Estampa/Padrão",
+              options: _patterns,
+              selectedValue: CustomCupStyle.selectedPattern,
+              onSelect: (pattern) => CustomCupStyle.selectedPattern = pattern as String,
+            ),
+
+            const Divider(color: Colors.white38),
+
+            // 3. Seleção de Modelo
+            _buildSelectionRow(
+              title: "Modelo do Copo",
+              options: _models,
+              selectedValue: CustomCupStyle.selectedModel,
+              onSelect: (model) => CustomCupStyle.selectedModel = model as String,
+            ),
+
+            const SizedBox(height: 40),
+            Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Personalização salva!')),
+                  );
+                },
+                child: const Text("Salvar Personalização"),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// -----------------------------
+// CupPainter (Desenha o copo 2D) - CORRIGIDO
+// -----------------------------
+class CupPainter extends CustomPainter {
+  final Color baseColor;
+  final String model;
+  final String pattern;
+
+  CupPainter({required this.baseColor, required this.model, required this.pattern});
+
+  // MÉTODO _drawHeart CORRIGIDO - AGORA ESTÁ PRESENTE NO CupPainter
+  void _drawHeart(Canvas canvas, Offset center, double size, Color color) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final path = Path();
+    path.moveTo(center.dx, center.dy + size * 0.3);
+    path.cubicTo(
+      center.dx + size, center.dy - size * 0.5,
+      center.dx + size * 0.5, center.dy - size * 1.2,
+      center.dx, center.dy - size * 0.5,
+    );
+    path.cubicTo(
+      center.dx - size * 0.5, center.dy - size * 1.2,
+      center.dx - size, center.dy - size * 0.5,
+      center.dx, center.dy + size * 0.3,
+    );
+    canvas.drawPath(path, paint);
+  }
+
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cupPaint = Paint()..color = baseColor;
+    final strokePaint = Paint()
+      ..color = Colors.black.withOpacity(0.4)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+
+    Path cupPath = Path();
+
+    // Desenho base de acordo com o modelo
+    switch (model) {
+      case 'Taça':
+        // Corpo da taça
+        cupPath.moveTo(size.width * 0.2, size.height * 0.7);
+        cupPath.lineTo(size.width * 0.2, size.height * 0.2);
+        cupPath.quadraticBezierTo(size.width * 0.5, size.height * 0.0, size.width * 0.8, size.height * 0.2);
+        cupPath.lineTo(size.width * 0.8, size.height * 0.7);
+        // Base da taça
+        cupPath.addRect(Rect.fromLTWH(size.width * 0.4, size.height * 0.7, size.width * 0.2, size.height * 0.25));
+        cupPath.addOval(Rect.fromLTWH(size.width * 0.3, size.height * 0.9, size.width * 0.4, size.height * 0.1));
+        break;
+      case 'Caneca':
+        // Corpo da Caneca
+        cupPath.addRect(Rect.fromLTWH(size.width * 0.1, size.height * 0.1, size.width * 0.6, size.height * 0.8));
+        // Alça da Caneca
+        final handleRect = Rect.fromLTWH(size.width * 0.65, size.height * 0.3, size.width * 0.25, size.height * 0.4);
+        cupPath.addRRect(RRect.fromRectAndRadius(handleRect, const Radius.circular(10)));
+        cupPath.addRRect(RRect.fromRectAndRadius(
+          Rect.fromLTWH(size.width * 0.7, size.height * 0.35, size.width * 0.15, size.height * 0.3),
+          const Radius.circular(5),
+        ));
+        break;
+      case 'Clássico':
+      default:
+        // Copo Simples (Clássico)
+        cupPath.moveTo(size.width * 0.1, size.height * 0.9);
+        cupPath.lineTo(size.width * 0.25, size.height * 0.1);
+        cupPath.lineTo(size.width * 0.75, size.height * 0.1);
+        cupPath.lineTo(size.width * 0.9, size.height * 0.9);
+        cupPath.close();
+        break;
+    }
+
+    canvas.drawPath(cupPath, cupPaint);
+    canvas.drawPath(cupPath, strokePaint);
+    
+    // --- Estampas (Patterns) ---
+    final patternPaint = Paint()..color = Colors.white.withOpacity(0.7);
+    
+    switch (pattern) {
+      case 'Pontos':
+        for (int i = 0; i < 5; i++) {
+          for (int j = 0; j < 5; j++) {
+            canvas.drawCircle(Offset(size.width * (0.2 + 0.15 * i), size.height * (0.1 + 0.15 * j)), 3, patternPaint);
+          }
+        }
+        break;
+      case 'Listras':
+        for (int i = 0; i < 8; i++) {
+          canvas.drawRect(
+            Rect.fromLTWH(0, size.height * 0.1 + i * 15, size.width, 5),
+            patternPaint,
+          );
+        }
+        break;
+      case 'Corações':
+        // Chamando o método _drawHeart CORRIGIDO
+        _drawHeart(canvas, Offset(size.width * 0.3, size.height * 0.4), 10, patternPaint.color);
+        _drawHeart(canvas, Offset(size.width * 0.7, size.height * 0.6), 8, patternPaint.color);
+        break;
+      case 'Nenhum':
+      default:
+        break;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CupPainter oldDelegate) {
+    return oldDelegate.baseColor != baseColor || oldDelegate.model != model || oldDelegate.pattern != pattern;
+  }
+}
+
+// =========================================================
+// 7. TELA DO JOGO (JOGO DO COPO)
+// =========================================================
+
+class TelaJogo extends StatefulWidget {
+  const TelaJogo({super.key});
+
+  @override
+  State<TelaJogo> createState() => _TelaJogoState();
+}
+
+class _TelaJogoState extends State<TelaJogo> with SingleTickerProviderStateMixin {
+  // ... (O restante da lógica do jogo permanece o mesmo)
+  // Estado LÓGICO
+  int ballLogicalPosition = 0; 
+  List<int> cupLogicalPosition = [0, 1, 2]; 
+  int? selectedCupIndex; 
+  
+  // Estado do Jogo/Animação
+  bool isShuffling = false; 
+  bool isRevealed = false; 
+  int rounds = 0; 
+
+  // Animação
+  late AnimationController _controller;
+  final Duration shuffleMoveDuration = const Duration(milliseconds: 300); 
+  int get totalShuffles => TelaConfig.currentShuffleCount; 
+  
+  // Posições e Dimensões Visuais
+  final double cupWidth = 120.0;
+  final double cupHeight = 120.0;
+  final double spacing = 30.0;
+  List<double> _xPositions = []; 
+  
+  List<Tween<Offset>> _cupTweens = List.generate(3, (_) => Tween(begin: Offset.zero, end: Offset.zero));
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: shuffleMoveDuration,
+    );
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _xPositions = _calculateXPositions(MediaQuery.of(context).size.width);
+      resetGame();
+    });
+  }
+
+  // --- Lógica de Posição ---
+  List<double> _calculateXPositions(double screenWidth) {
+    double totalWidth = (cupWidth * 3) + (spacing * 2);
+    double startX = (screenWidth - totalWidth) / 2;
+    return [
+      startX, 
+      startX + cupWidth + spacing, 
+      startX + (cupWidth * 2) + (spacing * 2), 
+    ];
+  }
+
+  // --- Lógica do Jogo ---
+
+  void resetGame() {
+    setState(() {
+      rounds++;
+      isShuffling = false;
+      isRevealed = false;
+      selectedCupIndex = null;
+      
+      cupLogicalPosition = [0, 1, 2];
+      ballLogicalPosition = Random().nextInt(3); 
+      
+      _cupTweens = List.generate(3, (_) => Tween(begin: Offset.zero, end: Offset.zero));
+    });
+    
+    Future.delayed(const Duration(milliseconds: 1000), _shuffleCups);
+  }
+
+  void chooseCup(int cupIndex) {
+    if (isShuffling || isRevealed) return;
+
+    setState(() {
+      selectedCupIndex = cupIndex;
+      isRevealed = true;
+    });
+
+    bool isCorrect = cupLogicalPosition[cupIndex] == ballLogicalPosition;
+    Future.delayed(const Duration(milliseconds: 500), () => _showResultDialog(isCorrect));
+  }
+  
+  // --- Lógica de Animação (Embaralhamento) ---
+
+  Future<void> _shuffleCups() async {
+    setState(() {
+      isShuffling = true;
+    });
+
+    for (int i = 0; i < totalShuffles; i++) {
+      int cupIndexA = Random().nextInt(3);
+      int cupIndexB = (cupIndexA + 1 + Random().nextInt(2)) % 3; 
+
+      int posA = cupLogicalPosition[cupIndexA];
+      int posB = cupLogicalPosition[cupIndexB];
+      
+      double dx = _xPositions[posB] - _xPositions[posA]; 
+
+      setState(() {
+        _cupTweens[cupIndexA] = Tween<Offset>(begin: Offset.zero, end: Offset(dx, 0));
+        _cupTweens[cupIndexB] = Tween<Offset>(begin: Offset.zero, end: Offset(-dx, 0));
+      });
+      
+      // Correção do erro de animação: usa await no forward()
+      await _controller.forward(from: 0.0); 
+
+      setState(() {
+        cupLogicalPosition[cupIndexA] = posB;
+        cupLogicalPosition[cupIndexB] = posA;
+        
+        _cupTweens = List.generate(3, (_) => Tween(begin: Offset.zero, end: Offset.zero));
+      });
+      
+      _controller.reset(); 
+    }
+
+    setState(() {
+      isShuffling = false; 
+    });
+  }
+
+  // --- Widgets ---
+  
+  void _showResultDialog(bool win) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(win ? "🎉 Você Acertou!" : "😥 Você Errou!"),
+          content: Text("A bolinha estava sob o copo na posição ${ballLogicalPosition + 1}."),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                resetGame(); 
+              },
+              child: const Text("Próxima Rodada"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildCup(int cupIndex) {
+    if (_xPositions.isEmpty) return Container(); 
+
+    double initialX = _xPositions[cupIndex];
+    int currentLogicalPosition = cupLogicalPosition[cupIndex];
+    bool hasBall = currentLogicalPosition == ballLogicalPosition;
+    bool isSelected = cupIndex == selectedCupIndex;
+
+    return Positioned(
+      left: initialX,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          Offset animatedOffset = _cupTweens[cupIndex].evaluate(_controller);
+          
+          double liftY = (isRevealed && hasBall) ? -30 : 0; 
+          
+          return Transform.translate(
+            offset: animatedOffset + Offset(0, liftY), 
+            child: GestureDetector(
+              onTap: isShuffling || isRevealed ? null : () => chooseCup(cupIndex),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                   // Bolinha
+                  if (hasBall && !isRevealed)
+                    Positioned(
+                      bottom: 5,
+                      child: Container(
+                        width: 30,
+                        height: 30,
+                        decoration: const BoxDecoration(
+                          color: pastelPink,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                    
+                  // Copo (Usando o CustomPainter)
+                  Container(
+                    height: cupHeight,
+                    width: cupWidth,
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: isSelected ? Colors.white : Colors.transparent,
+                        width: isSelected ? 4 : 0,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: isSelected ? 10 : 4,
+                          offset: const Offset(2, 4),
+                        ),
+                      ],
+                    ),
+                    child: CustomPaint(
+                       painter: CupPainter(
+                          baseColor: CustomCupStyle.selectedColor,
+                          model: CustomCupStyle.selectedModel,
+                          pattern: CustomCupStyle.selectedPattern,
+                        ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    String statusText;
+    if (isShuffling) {
+      statusText = "Embaralhando! Preste Atenção...";
+    } else if (isRevealed) {
+      statusText = "Rodada $rounds: Resultado Revelado!";
+    } else {
+      statusText = "Onde está a bolinha?";
+    }
+
+    return Scaffold(
+      backgroundColor: pastelPurple,
+      appBar: AppBar(
+        title: const Text("Jogo do Copo Fofo"),
+        backgroundColor: pastelPurple.withOpacity(0.8),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Status do Jogo
+            Text(
+              statusText,
+              style: const TextStyle(
+                fontSize: 28,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 40),
+
+            // Área dos Copos
+            SizedBox(
+              height: cupHeight + 80, 
+              width: MediaQuery.of(context).size.width,
+              child: Stack(
+                children: [
+                  _buildCup(0), 
+                  _buildCup(1), 
+                  _buildCup(2), 
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 40),
+
+            if (!isShuffling && !isRevealed)
+              const Text("Toque no copo que esconde a bolinha.", 
+                style: TextStyle(color: Colors.white70, fontSize: 16)),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+}
